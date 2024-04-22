@@ -21,11 +21,13 @@ export interface Message {
     time: number;
     direction?: MessageDirection;
     role:MessageRole;
+    id:string;
+    streaming?:boolean;
 }
 export enum MessageRole{
-    system = 0,
-    user=1,
-    assistant=2,
+    system = "system",
+    user="user",
+    assistant="assistant",
 }
 export interface SessionConfig{
     gptVersion:GptVersion;

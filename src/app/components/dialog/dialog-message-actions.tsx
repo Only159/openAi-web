@@ -1,48 +1,88 @@
-import Icon from '@ant-design/icons';
+import {ClearOutlined} from '@ant-design/icons';
 import styles from '@/app/components/dialog/dialog-message-action.module.scss';
 import {Select} from 'antd'
-import BreakIcon from "../../icons/break.svg";
 import {userChatStore} from '@/app/store/chat-store';
 
 import {SessionConfig} from "@/types/chat";
 import {GptVersion} from "@/app/constans";
+import {CSSProperties, useRef, useState} from "react";
 
-function Action(props:{
-    icon:JSX.Element;
-    onClick?:()=>void;
-}){
+export function Action(props: {
+    icon: JSX.Element;
+    onClick?: () => void;
+    styles?: CSSProperties
+}) {
+    const {styles: sty} = props
     return <div className={styles['chat-input-action']} onClick={props.onClick}>
         <div className={styles["icon"]}>
             {props.icon}
         </div>
     </div>
 }
+
+export function ChatAction(props: {
+    text?: string;
+    icon: JSX.Element;
+    onClick: () => void;
+}) {
+    const iconRef = useRef<HTMLDivElement>(null);
+    const textRef = useRef<HTMLDivElement>(null);
+    const [width, setWidth] = useState({
+        full: 16,
+        icon: 16,
+    });
+
+    function updateWidth() {
+        if (!iconRef.current || !textRef.current) return;
+        const getWidth = (dom: HTMLDivElement) => dom.getBoundingClientRect().width;
+        const textWidth = getWidth(textRef.current);
+        const iconWith = getWidth(iconRef.current);
+        setWidth({
+            full: textWidth + iconWith,
+            icon: iconWith,
+        });
+    }
+
+    return (
+        <div
+            className={`${styles["chat-input-action"]} clickable`}
+            onClick={() => {
+                props.onClick();
+                setTimeout(updateWidth, 1);
+            }}
+            onMouseEnter={updateWidth}
+            onTouchStart={updateWidth}
+            style={
+                {
+                    "--icon-width": `${width.icon}px`,
+                    "--full-width": `${width.full}px`,
+                } as React.CSSProperties
+            }>
+            <div ref={iconRef} className={styles["icon"]}>
+                {props.icon}
+            </div>
+            <div ref={textRef} className={styles["text"]}>
+                {props.text}
+            </div>
+        </div>
+    );
+}
+
 export default function DialogMessagesActions(props: {
     config: SessionConfig
-}){
+}) {
     const chatStore = userChatStore();
     const {config} = props
     return <div className={styles['chat-input-actions']}>
-        <Action icon={<Icon component={BreakIcon} />} onClick={() => {
-            chatStore.updateCurrentSession((session) => {
-                if (session.clearContextIndex === session.messages.length) {
-                    session.clearContextIndex = undefined;
-                } else {
-                    session.clearContextIndex = session.messages.length;
-                }
-            });
-        }}></Action>
         <Select
-            value={config?.gptVersion??GptVersion.GLM_3_5_TURBO}
-            style={{ width: 160 }}
+            value={config?.gptVersion ?? GptVersion.GLM_3_5_TURBO}
+            style={{width: 160}}
             options={[
-                { value: GptVersion.GLM_3_5_TURBO, label: 'glm-3-turbo' },
-                { value: GptVersion.CHATGLM_TURBO, label: 'chatglm_turbo' },
-                { value: GptVersion.COGVIEW_3, label: 'cogview-3' },
-                { value: GptVersion.GLM_4, label: 'glm-4' },
-                { value: GptVersion.GLM_4V ,label: 'glm-4v' },
-
-
+                {value: GptVersion.GLM_3_5_TURBO, label: 'glm-3-turbo'},
+                {value: GptVersion.CHATGLM_TURBO, label: 'chatglm_turbo'},
+                {value: GptVersion.COGVIEW_3, label: 'cogview-3'},
+                {value: GptVersion.GLM_4, label: 'glm-4'},
+                {value: GptVersion.GLM_4V, label: 'glm-4v'},
             ]}
             onChange={(value) => {
                 chatStore.updateCurrentSession((session) => {
@@ -53,5 +93,14 @@ export default function DialogMessagesActions(props: {
                 });
             }}
         />
+        <ChatAction text="清除聊天" icon={<ClearOutlined/>} onClick={()=>{
+            chatStore.updateCurrentSession((session)=>{
+                if (session.clearContextIndex === session.messages.length){
+                    session.clearContextIndex = undefined;
+                }else {
+                    session.clearContextIndex = session.messages.length;
+                }
+            })
+        }}/>
     </div>
 }
