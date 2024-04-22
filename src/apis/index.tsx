@@ -19,7 +19,7 @@ export const completions = (data: {
     messages: { content: string, role: MessageRole }[],
     model: GptVersion
 }) => {
-    return fetch('http://localhost:8090/api/v1/chat/completions', {
+    return fetch('http://localhost:8090/api/v1/chatgml/chat/completions', {
         method: 'post',
         headers: {
             // b8b6 后续用于写入 token 加密信息
